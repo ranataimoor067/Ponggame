@@ -88,7 +88,7 @@
 						// start on the left eh
 						this.playerPaddle.x = 20;
 						this.playerPaddle.y = this.stage.canvas.height / 2;
-						this.playerPaddle.on("pressmove", this.movePlayerPaddle, this);
+						this.stage.on("stagemousemove", this.movePlayerPaddle, this);
 
 						// now do cpu paddle
 						this.stage.addChild(this.cpuPaddle);
