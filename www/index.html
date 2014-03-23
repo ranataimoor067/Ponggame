@@ -50,7 +50,7 @@
 					stage : new createjs.Stage(document.getElementById("stage")),
 					ball : new createjs.Shape(),
 					cpuPaddle : new createjs.Shape(),
-					playerPaddle : new createjs.Shape(),
+					playerPaddle : new createjs.Container(),
 					ballSpeedX : -3,
 					ballSpeedY : -2,
 					ballRadius : 5,
@@ -63,8 +63,6 @@
 								this.moveCpuPaddle, this));
 						createjs.Ticker.addEventListener("tick", jQuery.proxy(
 								this.hitTestBall, this));
-						window.onmousemove = jQuery.proxy(
-								this.movePlayerPaddle, this);
 						this.stage.addChild(this.ball);
 						this.ball.graphics.beginFill('rgba(255,255,255,1)');
 						this.ball.graphics.drawCircle(this.ballRadius,
@@ -77,16 +75,20 @@
 						this.ball.y = this.stage.canvas.height / 2;
 
 						// now do player paddle
-						this.stage.addChild(this.playerPaddle);
-						this.playerPaddle.graphics
+						this.stage.mouseMoveOutside = true;
+						var oRectangle = new createjs.Shape();
+						oRectangle.graphics
 								.beginFill('rgba(255,255,255,1)');
-						this.playerPaddle.graphics.drawRect(0, 0,
+						oRectangle.graphics.drawRect(0, 0,
 								this.ballRadius * 2, this.paddleHeight);
+						this.playerPaddle.addChild(oRectangle);
+						this.stage.addChild(this.playerPaddle);
 						this.playerPaddle.regX = this.ballRadius;
 						this.playerPaddle.regY = this.paddleHeight / 2
 						// start on the left eh
 						this.playerPaddle.x = 20;
 						this.playerPaddle.y = this.stage.canvas.height / 2;
+						this.playerPaddle.on("pressmove", this.movePlayerPaddle, this);
 
 						// now do cpu paddle
 						this.stage.addChild(this.cpuPaddle);
@@ -103,7 +105,7 @@
 						// now set width and height of both
 						this.cpuPaddle.width = this.playerPaddle.width = this.ballRadius * 2;
 						this.cpuPaddle.height = this.playerPaddle.height = this.paddleHeight;
-
+						createjs.Ticker.addListener(this.stage);
 						this.stage.update();
 					},
 					cpuScore : 0,
@@ -140,9 +142,8 @@
 						jQuery("#computerScore").html(this.cpuScore);
 
 					},
-					movePlayerPaddle : function(event) {
-						event = event || window.event; // IE-ism
-						this.playerPaddle.y = event.clientY;
+					movePlayerPaddle : function(evt) {
+						this.playerPaddle.y = evt.stageY;
 						//constrain the paddle to the stage
 						if (this.playerPaddle.y - this.paddleHeight / 2 < 0) {
 							this.playerPaddle.y = this.paddleHeight / 2;
@@ -150,6 +151,7 @@
 							this.playerPaddle.y = this.stage.canvas.height
 									- this.paddleHeight / 2;
 						}
+						this.stage.update();
 					},
 					cpuPaddleSpeed : 3,
 					moveCpuPaddle : function() {
@@ -168,7 +170,7 @@
 
 					},
 					hitTestBall : function() {
-						if (this.playerPaddle.hitTestObject(this.ball) != null) {
+						if (this.ball.hitTestObject(this.playerPaddle) != null) {
 							if (this.ballSpeedX < 0) {
 								this.ballSpeedX *= -1;
 								this.ballSpeedY = this.calculateBallAngle(this.playerPaddle.y,
